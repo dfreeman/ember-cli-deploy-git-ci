@@ -1,26 +1,44 @@
 # ember-cli-deploy-git-ci
 
-This README outlines the details of collaborating on this Ember addon.
+This is an [ember-cli-deploy](http://ember-cli.github.io/ember-cli-deploy/) plugin for managing deployments to a git branch in a CI environment like [Travis](https://travis-ci.org/).
+
+It takes care of configuring a git user and a [deploy key](https://developer.github.com/v3/guides/managing-deploy-keys/#deploy-keys) to use when pushing your branch, but expects the actual publish to be managed by a plugin like [ember-cli-deploy-git](https://github.com/ef4/ember-cli-deploy-git)
+
+**NEVER COMMIT YOUR DEPLOY KEY IN PLAINTEXT TO SOURCE CONTROL.** If you do, you should immediately revoke the key and generate a new one.
 
 ## Installation
 
-* `git clone <repository-url>` this repository
-* `cd ember-cli-deploy-git-ci`
-* `npm install`
+`ember install ember-cli-deploy ember-cli-deploy-build ember-cli-deploy-git ember-cli-deploy-git-ci`
 
-## Running
+## Configuration
 
-* `ember serve`
-* Visit your app at [http://localhost:4200](http://localhost:4200).
+In `config/deploy.js`, (which `ember-cli-deploy` will helpfully generate for you), you can pass the following options within a `git-ci` key:
 
-## Running Tests
+ - `enabled`: whether this plugin should activate at all (defaults to true if the `CI` environment variable is set, `false` otherwise in order not to interfere with local deploys)
+ - `userName`: a user name to be reflected in the deploy commit (defaults to the active `user.name` config for the local repo if present, or `Tomster` otherwise)
+ - `userEmail`: a user email to be reflected in the deploy commit (defaults to the active `user.email` config for the local repo if present, or `tomster@emberjs.com` otherwise)
+ - `deployKey`: the text of the SSH private key to use for deploying (defaults to the `DEPLOY_KEY` environment variable; overrides `deployKeyPath` if both are set)
+ - `deployKeyPath`: the path on disk to your deploy key
 
-* `npm test` (Runs `ember try:each` to test your addon against multiple Ember versions)
-* `ember test`
-* `ember test --server`
+An example:
 
-## Building
+```js
+ENV['git-ci'] = {
+  userName: 'DeployBot',
+  userEmail: 'deploys@example.com',
+  deployKey: process.env.SECRET_KEY
+};
+```
 
-* `ember build`
+## Setting Up a Deploy Key
 
-For more information on using ember-cli, visit [https://ember-cli.com/](https://ember-cli.com/).
+- Use [`ssh-keygen`](https://www.freebsd.org/cgi/man.cgi?query=ssh-keygen&sektion=1&manpath=OpenBSD+3.9) to generate a new public/private key pair:
+  ```bash
+  ssh-keygen -t rsa -b 4096 -N '' -f deploy_key
+  ```
+- This will produce two files in your current directory: `deploy_key` (the private key) and `deploy_key.pub` (the public key). **Do not commit these files to your repository.**
+- Configure the public key with your git hosting provider. For [Github](https://developer.github.com/v3/guides/managing-deploy-keys/#deploy-keys), you can find this under the settings for your repository, at `https://github.com/<user>/<repo>/settings/keys`
+- Configure the private key with your CI provider. For Travis, the simplest way to accomplish this is by using the [Travis CLI](https://github.com/travis-ci/travis.rb#installation) to set the `DEPLOY_KEY` environment variable for your repo:
+  ```bash
+  travis env set -- DEPLOY_KEY "$(cat deploy_key)"
+  ```
