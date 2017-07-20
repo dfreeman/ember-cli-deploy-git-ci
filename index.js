@@ -31,7 +31,7 @@ class GitCIDeployPlugin extends DeployPlugin {
     };
   }
 
-  willUpload(context) {
+  setup(context) {
     let config = context.config['git-ci'];
     if (!config.enabled) return;
 
