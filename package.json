@@ -1,6 +1,6 @@
 {
   "name": "ember-cli-deploy-git-ci",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An ember-cli-deploy plugin for managing git deploys in CI.",
   "keywords": [
     "ember-addon",
