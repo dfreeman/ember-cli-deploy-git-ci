@@ -2,13 +2,19 @@
 
 This is an [ember-cli-deploy](http://ember-cli.github.io/ember-cli-deploy/) plugin for managing deployments to a git branch in a CI environment like [Travis](https://travis-ci.org/).
 
-It takes care of configuring a git user and a [deploy key](https://developer.github.com/v3/guides/managing-deploy-keys/#deploy-keys) to use when pushing your branch, but expects the actual publish to be managed by a plugin like [ember-cli-deploy-git](https://github.com/ef4/ember-cli-deploy-git)
+It takes care of configuring a git user and a [deploy key](https://developer.github.com/v3/guides/managing-deploy-keys/#deploy-keys) to use when pushing your branch, but expects the actual publish to be managed by a plugin like [ember-cli-deploy-git](https://github.com/ef4/ember-cli-deploy-git).
 
 **NEVER COMMIT YOUR DEPLOY KEY IN PLAINTEXT TO SOURCE CONTROL.** If you do, you should immediately revoke the key and generate a new one.
 
 ## Installation
 
 `ember install ember-cli-deploy ember-cli-deploy-build ember-cli-deploy-git ember-cli-deploy-git-ci`
+
+## Use Case
+
+Many authors use their addon's dummy app as a way to showcase what they've built and provide documentation. [Github Pages](https://pages.github.com/) provides an easy way to host this documentation by building the app and writing the output to a `gh-pages` branch, which is exactly what [ember-cli-deploy-git](https://github.com/ef4/ember-cli-deploy-git) enables. However, this requires the author to manually deploy the app any time changes are made.
+
+Because most CI providers use a read-only method to access code for testing, automating the process isn't as simple as adding `ember deploy` to the end of a build, since the build machine doesn't have permission to push new code to the `gh-pages` branch. Given the necessary configuration (minimally, a [deploy key](https://developer.github.com/v3/guides/managing-deploy-keys/#deploy-keys)), this plugin takes care of setting up credentials so that a CI build is able to deploy the built app when it completes.
 
 ## Configuration
 
@@ -27,6 +33,14 @@ ENV['git-ci'] = {
   userName: 'DeployBot',
   userEmail: 'deploys@example.com',
   deployKey: process.env.SECRET_KEY
+};
+```
+
+**Note**: deploy keys only work with an SSH origin for your repo, and many CI providers clone using HTTP(S) instead. You may need to explicitly set the target repo in your configuration for `ember-cli-deploy-git`. For instance, to deploy to this repository I could use:
+
+```js
+ENV['git'] = {
+  repo: 'git@github.com:dfreeman/ember-cli-deploy-git-ci.git'
 };
 ```
 
