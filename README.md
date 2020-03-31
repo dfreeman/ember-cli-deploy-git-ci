@@ -48,7 +48,7 @@ ENV['git'] = {
 
 - Use [`ssh-keygen`](https://www.freebsd.org/cgi/man.cgi?query=ssh-keygen&sektion=1&manpath=OpenBSD+3.9) to generate a new public/private key pair:
   ```bash
-  ssh-keygen -t rsa -b 4096 -N '' -f deploy_key
+  ssh-keygen -m PEM -t rsa -b 4096 -C "your_email@example.com" -N '' -f deploy_key
   ```
 - This will produce two files in your current directory: `deploy_key` (the private key) and `deploy_key.pub` (the public key). **Do not commit these files to your repository.**
 - Configure the public key with your git hosting provider. For [Github](https://developer.github.com/v3/guides/managing-deploy-keys/#deploy-keys), you can find this under the settings for your repository, at `https://github.com/<user>/<repo>/settings/keys`
