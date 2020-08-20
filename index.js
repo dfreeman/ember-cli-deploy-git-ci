@@ -97,7 +97,13 @@ class GitCIDeployPlugin extends DeployPlugin {
   // Write the given key out to a temporary location on disk
   writeDeployKey(config) {
     let keyPath = config.tempDeployKeyPath = path.join(os.tmpdir(), `deploy_key_${process.pid}`);
-    return fs.writeFile(keyPath, config.deployKey, { mode: KEY_PERMISSIONS })
+    
+    // If the key is missing the final new-line, `ssh-add` will fail with an error, like:
+    // Error loading key "/var/folders/zd/7ly06mpn2t512t2fr1g1ppw80000gq/T/deploy_key_34961": invalid format
+    let { deployKey } = config;
+    if (!deployKey.endsWith('\n')) deployKey += '\n\;
+    
+    return fs.writeFile(keyPath, deployKey, { mode: KEY_PERMISSIONS })
       .then(() => keyPath);
   }
 
