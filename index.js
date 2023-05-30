@@ -4,7 +4,6 @@
 const fs = require('fs-extra');
 const path = require('path');
 const os = require('os');
-const execa = require('execa');
 const DeployPlugin = require('ember-cli-deploy-plugin');
 
 module.exports = {
@@ -31,16 +30,16 @@ class GitCIDeployPlugin extends DeployPlugin {
     };
   }
 
-  setup(context) {
+  async setup(context) {
     let config = context.config['git-ci'];
     if (!config.enabled) return;
 
-    return this.determineDeployKeyPath(config)
-      .then((keyPath) => this.registerDeployKey(keyPath))
-      .then(() => this.configureDeployUser(config));
+    let keyPath = await this.determineDeployKeyPath(config);
+    await this.registerDeployKey(keyPath);
+    return this.configureDeployUser(config);
   }
 
-  teardown(context) {
+  async teardown(context) {
     let config = context.config['git-ci'];
     if (!config.enabled) return;
 
@@ -49,6 +48,7 @@ class GitCIDeployPlugin extends DeployPlugin {
       fs.unlinkSync(config.tempDeployKeyPath);
     }
 
+    const execa = await import('execa');
     // Kill the SSH agent we started
     return execa('pkill', ['ssh-agent']);
   }
@@ -62,9 +62,10 @@ class GitCIDeployPlugin extends DeployPlugin {
 
   // Set the given git config value for the given key, defaulting to a fallback value
   // if no explicit one was configured and no existing value is present.
-  ensureGitConfig(key, explicitValue, defaultValue) {
+  async ensureGitConfig(key, explicitValue, defaultValue) {
     let force = !!explicitValue;
-    return execa('git', ['config', key])
+    const execa = await import('execa');
+    execa('git', ['config', key])
       .then(() => force, () => true)
       .then((set) => {
         if (set) {
@@ -75,7 +76,8 @@ class GitCIDeployPlugin extends DeployPlugin {
 
   // Start an SSH agent and add our deploy key, then export the socket that the
   // agent is listening on so subsequent git invocations will talk to it.
-  registerDeployKey(keyPath) {
+  async registerDeployKey(keyPath) {
+    const execa = await import('execa');
     return execa.shell(`
       eval $(ssh-agent) > /dev/null &&
       ssh-add "${keyPath}" &&
